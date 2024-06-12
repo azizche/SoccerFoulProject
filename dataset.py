@@ -18,4 +18,4 @@ class MVFoulDataset(Dataset):
         
 
 
-        return item_video_paths, 
+        return item_video_paths, item_label
