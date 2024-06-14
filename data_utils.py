@@ -1,8 +1,8 @@
 import numpy as np 
-from utils import *
+from SoccerFoulProject.utils import *
 from pathlib import Path
 from typing import Tuple
-def labels_to_vector(folder_path:str,split:str) -> Tuple[list[list[Clip]], list[Clip]]:
+def labels_to_vector(folder_path:str,split:str) -> Tuple[list[Clips], list[Label]]:
     annotations= read_data(Path(folder_path) / Path(split) /Path('annotations.json'))
     video_paths=[]
     labels= []

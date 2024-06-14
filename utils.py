@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from torchvision.io import read_video
 
 def read_data(json_path):
     with open(json_path, 'r') as file:
@@ -32,7 +33,7 @@ class Label:
     def from_dictionary(cls,data):
         return cls(offence=data['Offence'], 
                      action_class=data['Action class'], 
-                     severity=data['Sevirity'], 
+                     severity=data['Severity'], 
                      contact=data['Contact'], 
                      bodypart=data['Bodypart'],
                      upperBodypart=data['Upper body part'],
@@ -48,11 +49,11 @@ class Label:
 class Clip:
     folder_path=''
     split=''
-    def __init__(self,generic_path,camera_type,action_timestamp,relpay_speed):
+    def __init__(self,generic_path,camera_type,action_timestamp,replay_speed):
         self.generic_path=generic_path
         self.camera_type=camera_type
         self.action_timestamp=action_timestamp
-        self.replay_speed=relpay_speed
+        self.replay_speed=replay_speed
     
     @classmethod
     def from_dictionnary(cls,data):
@@ -65,6 +66,9 @@ class Clip:
         path_abs= Path(self.generic_path+'.mp4')
         path_r= Path(f'{Clip.folder_path}/{Clip.split}')/ path_abs.parent.name / path_abs.name
         return path_r    
+    
+    def read_clip(self):
+        return read_video(self.get_relative_path())
 
 class Clips:
     def __init__(self,clips:list[Clip]):
@@ -79,3 +83,6 @@ class Clips:
             if clip.camera_type=="Main camera center":
                 return clip
         #TODO: add warning if no main camera found
+
+    def read_clips(self):
+        return [clip.read_clip() for clip in self.clips]
