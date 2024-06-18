@@ -14,7 +14,7 @@ def get_relative_path(absolute_path,folder_path,split):
     path_r= Path(f'{folder_path}/{split}')/ path_abs.parent.name / path_abs.name
     return path_r
 
-
+#TODO: add seperate files for testing
 class Label:
     def __init__(self,offence,action_class,severity,contact,bodypart,upperBodypart, multipleFouls, tryToplay, tourchBall, handball, handballOffence):
         self.offence=offence
@@ -43,6 +43,12 @@ class Label:
                      handballOffence=data['Handball offence'],
                      tourchBall=data['Touch ball'],
                      )
+    def get_offence_severity_label(self):
+        if self.offence=='No offence':
+            return 0
+        if self.offence=='Offence':
+            return int(self.severity) + 1
+
 
 
 
