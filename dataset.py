@@ -16,7 +16,4 @@ class MVFoulDataset(Dataset):
     def __getitem__(self,index):
         item_video_paths=self.video_paths[index].read_clips()
         item_label=self.labels[index]
-        
-
-
         return item_video_paths, item_label

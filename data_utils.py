@@ -27,7 +27,10 @@ def labels_to_vector(folder_path:str,split:str) -> Tuple[list[Clips], list[Label
             label.severity='1'
         
         if label.offence=='' or label.action_class=='' or label.severity=='':
-            print('Problem')        
+            print('Problem')
+            actions_to_skip.append(action)
+            continue        
+
         
         video_paths.append(Clips.from_dictionnary(action_info['Clips']))
         labels.append(label)

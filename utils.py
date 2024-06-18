@@ -28,6 +28,7 @@ class Label:
         self.touchBall=tourchBall
         self.handball=handball
         self.handballOffence=handballOffence
+        
     
     @classmethod
     def from_dictionary(cls,data):
@@ -47,7 +48,7 @@ class Label:
         if self.offence=='No offence':
             return 0
         if self.offence=='Offence':
-            return int(self.severity) + 1
+            return int(self.severity[0]) + 1
 
 
 
