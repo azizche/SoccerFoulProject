@@ -4,7 +4,7 @@ from torchvision.models.video import r2plus1d_18, R2Plus1D_18_Weights, s3d, S3D_
 from torchvision.models.video import mvit_v2_s, MViT_V2_S_Weights, mvit_v1_b, MViT_V1_B_Weights
 import torch
 class MVFoulModel(nn.Module):
-    def __init__(self,video_encoder_name, clip_aggregation,feat_dim):
+    def __init__(self,video_encoder_name='r3d_18', clip_aggregation='mean',feat_dim=400):
         if video_encoder_name== 'r3d_18':
             self.video_encoder= r3d_18(weights= R3D_18_Weights.DEFAULT)
         elif video_encoder_name=='mc3_18':

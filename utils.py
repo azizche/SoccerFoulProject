@@ -75,7 +75,7 @@ class Clip:
         return path_r    
     
     def read_clip(self):
-        return read_video(self.get_relative_path())
+        return read_video(self.get_relative_path(), pts_unit='pts', output_format='TCHW')[0]
 
 class Clips:
     def __init__(self,clips:list[Clip]):
