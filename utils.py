@@ -105,5 +105,5 @@ class Clips:
                 return clip
         #TODO: add warning if no main camera found
 
-    def read_clips(self):
-        return [clip.read_clip() for clip in self.clips]
+    def read_clips(self,transform):
+        return [clip.read_clip(transform) for clip in self.clips]
