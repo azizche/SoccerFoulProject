@@ -1,7 +1,8 @@
 import json
 from pathlib import Path
 from torchvision.io import read_video
-
+import numpy as np
+import torch
 def read_data(json_path):
     with open(json_path, 'r') as file:
         data=json.load(file)
@@ -74,8 +75,21 @@ class Clip:
         path_r= Path(f'{Clip.folder_path}/{Clip.split}')/ path_abs.parent.name / path_abs.name
         return path_r    
     
-    def read_clip(self):
-        return read_video(self.get_relative_path(), pts_unit='pts', output_format='TCHW')[0]
+    def read_clip(self,transform):
+        video_info=read_video(self.get_relative_path(),output_format='TCHW',pts_unit='pts')
+        video=video_info[0]
+
+        #TODO: slice image so u get +- frames of the timestamp of the action
+        video = video[80:100,:,:,:]
+
+        #Resizing video
+        #transform must not include random transformation
+        #TODO: make transformation include random transformations
+        if transform:
+            new_video=np.zeros((video.shape[0]))
+            for i in range(len(new_video)):
+                new_video[i]=transform(video[i])
+        return new_video.to(torch.float32)
 
 class Clips:
     def __init__(self,clips:list[Clip]):
