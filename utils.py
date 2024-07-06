@@ -79,8 +79,11 @@ class Clip:
         path_r= Path(f'{Clip.folder_path}/{Clip.split}')/ path_abs.parent.name / path_abs.name
         return path_r    
     
-    def read_clip(self):
-        return read_video(self.get_relative_path(), pts_unit='pts', output_format='TCHW')[0]
+    def read_clip(self,action_ts_offset):
+        video= read_video(self.get_relative_path(), pts_unit='pts', output_format='TCHW',)[0]
+        #transforming the video
+        
+        return video 
 
 class Clips:
     def __init__(self,clips:list[Clip]):
@@ -96,5 +99,8 @@ class Clips:
                 return clip
         #TODO: add warning if no main camera found
 
-    def read_clips(self):
-        return [clip.read_clip() for clip in self.clips]
+    def __len__(self):
+        return len(self.clips)
+    
+    def read_clips(self, action_ts_offset):
+        return [clip.read_clip(action_ts_offset) for clip in self.clips]

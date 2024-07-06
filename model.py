@@ -6,7 +6,6 @@ import torch
 from SoccerFoulProject.config.classes import *
 class MVFoulModel(nn.Module):
     def __init__(self,video_encoder_name='r3d_18', clip_aggregation='mean',feat_dim=100):
-        super(MVFoulModel,self).__init__()
         if video_encoder_name== 'r3d_18':
             self.video_encoder= r3d_18(weights= R3D_18_Weights.DEFAULT)
         elif video_encoder_name=='mc3_18':
