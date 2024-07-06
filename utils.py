@@ -29,7 +29,6 @@ class Label:
         self.handball=handball
         self.handballOffence=handballOffence
         
-    
     @classmethod
     def from_dictionary(cls,data):
         return cls(offence=data['Offence'], 
@@ -59,14 +58,14 @@ class Clip:
     def __init__(self,generic_path,camera_type,action_timestamp,replay_speed):
         self.generic_path=generic_path
         self.camera_type=camera_type
-        self.action_timestamp=action_timestamp
+        self.action_timestamp=int(action_timestamp)
         self.replay_speed=replay_speed
     
     @classmethod
     def from_dictionnary(cls,data):
         return cls(generic_path=data['Url'],
                    camera_type=data['Camera type'],
-                   action_timestamp=data['Timestamp'],
+                   action_timestamp=int(data['Timestamp']),
                    replay_speed=data['Replay speed'])
     
     def get_relative_path(self):
@@ -74,8 +73,11 @@ class Clip:
         path_r= Path(f'{Clip.folder_path}/{Clip.split}')/ path_abs.parent.name / path_abs.name
         return path_r    
     
-    def read_clip(self):
-        return read_video(self.get_relative_path(), pts_unit='pts', output_format='TCHW')[0]
+    def read_clip(self,action_ts_offset):
+        video= read_video(self.get_relative_path(), pts_unit='pts', output_format='TCHW',)[0]
+        #transforming the video
+        
+        return video 
 
 class Clips:
     def __init__(self,clips:list[Clip]):
@@ -91,5 +93,8 @@ class Clips:
                 return clip
         #TODO: add warning if no main camera found
 
-    def read_clips(self):
-        return [clip.read_clip() for clip in self.clips]
+    def __len__(self):
+        return len(self.clips)
+    
+    def read_clips(self, action_ts_offset):
+        return [clip.read_clip(action_ts_offset) for clip in self.clips]

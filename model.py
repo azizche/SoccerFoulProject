@@ -5,6 +5,7 @@ from torchvision.models.video import mvit_v2_s, MViT_V2_S_Weights, mvit_v1_b, MV
 import torch
 class MVFoulModel(nn.Module):
     def __init__(self,video_encoder_name='r3d_18', clip_aggregation='mean',feat_dim=400):
+        super(MVFoulModel,self).__init__()
         if video_encoder_name== 'r3d_18':
             self.video_encoder= r3d_18(weights= R3D_18_Weights.DEFAULT)
         elif video_encoder_name=='mc3_18':
@@ -36,17 +37,14 @@ class MVFoulModel(nn.Module):
 
     def forward(self, clips):
         #compute video features
-        all_clip_features=torch.tensor([])
-        for clip in clips:
-            clip_features= self.video_encoder(clip)
-            all_clip_features= torch.vstack((all_clip_features,clip_features))
-        
+        all_clip_features=self.video_encoder(clips)        
         #aggregate all clips' features
         if self.clip_agregation=='mean':
             action_features= torch.mean(all_clip_features,dim=0) 
-        else:
+        elif self.clip_agregation=='max':
             action_features=torch.max(all_clip_features,dim=0)
-
+        else:
+            print('problem should be mean or max')
         pred_action=self.action_classifcation_net(action_features)
         pred_offence_severity=self.offence_classification_net(action_features)
 
