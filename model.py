@@ -3,8 +3,9 @@ from torchvision.models.video import r3d_18, R3D_18_Weights, MC3_18_Weights, mc3
 from torchvision.models.video import r2plus1d_18, R2Plus1D_18_Weights, s3d, S3D_Weights
 from torchvision.models.video import mvit_v2_s, MViT_V2_S_Weights, mvit_v1_b, MViT_V1_B_Weights
 import torch
+from SoccerFoulProject.config.classes import *
 class MVFoulModel(nn.Module):
-    def __init__(self,video_encoder_name='r3d_18', clip_aggregation='mean',feat_dim=400):
+    def __init__(self,video_encoder_name='r3d_18', clip_aggregation='mean',feat_dim=100):
         super(MVFoulModel,self).__init__()
         if video_encoder_name== 'r3d_18':
             self.video_encoder= r3d_18(weights= R3D_18_Weights.DEFAULT)
@@ -23,13 +24,14 @@ class MVFoulModel(nn.Module):
             nn.LayerNorm(feat_dim),
             nn.Linear(feat_dim, feat_dim),
             nn.Sigmoid(),
-            nn.Linear(feat_dim, feat_dim),
+            nn.Linear(feat_dim, len(EVENT_DICTIONARY_action_class)),
         )
         self.offence_classification_net=nn.Sequential(
             nn.LayerNorm(feat_dim),
             nn.Linear(feat_dim, feat_dim),
             nn.Sigmoid(),
-            nn.Linear(feat_dim, feat_dim),
+            nn.Linear(feat_dim, 1),
+            
         )
 
 

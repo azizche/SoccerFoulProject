@@ -3,6 +3,7 @@ from pathlib import Path
 from torchvision.io import read_video
 import numpy as np
 import torch
+from SoccerFoulProject.config.classes import *
 def read_data(json_path):
     with open(json_path, 'r') as file:
         data=json.load(file)
@@ -49,6 +50,10 @@ class Label:
             return 0
         if self.offence=='Offence':
             return int(self.severity[0]) + 1
+    def get_action_label(self):
+        one_hot_encoded_label=np.zeros((len(EVENT_DICTIONARY_action_class),))
+        one_hot_encoded_label[EVENT_DICTIONARY_action_class[self.action_class]]=1
+        return one_hot_encoded_label
 
 
 
