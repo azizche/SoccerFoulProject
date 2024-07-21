@@ -4,6 +4,9 @@ from torchvision.io import read_video
 import numpy as np
 import torch
 from SoccerFoulProject.config.classes import *
+import IPython.display as ipd 
+import matplotlib.pyplot as plt
+import seaborn as sns
 def read_data(json_path):
     with open(json_path, 'r') as file:
         data=json.load(file)
@@ -46,14 +49,20 @@ class Label:
                      tourchBall=data['Touch ball'],
                      )
     def get_offence_severity_label(self):
+        offence_severit_label=torch.zeros((4,))
         if self.offence=='No offence':
-            return 0
+            index=0
         if self.offence=='Offence':
-            return int(self.severity[0]) + 1
+            index=int(self.severity[0])//2 +1
+        offence_severit_label[index]=1
+        return offence_severit_label
     def get_action_label(self):
-        one_hot_encoded_label=np.zeros((len(EVENT_DICTIONARY_action_class),))
+        one_hot_encoded_label=torch.zeros((len(EVENT_DICTIONARY_action_class),))
         one_hot_encoded_label[EVENT_DICTIONARY_action_class[self.action_class]]=1
         return one_hot_encoded_label
+    def to_dictionnary(self):
+        return {'Offence severity label':self.get_offence_severity_label(),
+                'Action label':self.get_action_label()}
 
 
 
@@ -79,10 +88,8 @@ class Clip:
         path_r= Path(f'{Clip.folder_path}/{Clip.split}')/ path_abs.parent.name / path_abs.name
         return path_r    
     
-    def read_clip(self,action_ts_offset):
-        video= read_video(self.get_relative_path(), pts_unit='pts', output_format='TCHW',)[0]
-        #transforming the video
-        
+    def read_clip(self,start_pts,end_pts):
+        video= read_video(self.get_relative_path(), pts_unit='sec', output_format='TCHW',start_pts=start_pts,end_pts=end_pts)[0]        
         return video 
 
 class Clips:
@@ -90,8 +97,20 @@ class Clips:
         self.clips=clips
     
     @classmethod
-    def from_dictionnary(cls,data):
-        return cls([Clip.from_dictionnary(clip_info) for clip_info in data])
+    def from_dictionnary(cls,data,num_views):
+        res=[]
+        for clip_info in data:
+            
+            if clip_info['Camera type']=="Main camera center":
+                main_camera_found=True
+                res.append(Clip.from_dictionnary(clip_info))
+            else:
+                if not(main_camera_found) and len(res)<(num_views-1):
+                    res.append(Clip.from_dictionnary(clip_info))
+                elif main_camera_found and len(res)<num_views:
+                    res.append(Clip.from_dictionnary(clip_info))
+            if len(res)==num_views:
+                return cls(res)   
     
     def get_main_camera(self):
         for clip in self.clips:
@@ -102,5 +121,59 @@ class Clips:
     def __len__(self):
         return len(self.clips)
     
-    def read_clips(self, action_ts_offset):
-        return [clip.read_clip(action_ts_offset) for clip in self.clips]
+    def read_clips(self, start,end):
+        return [clip.read_clip(start_pts=start,end_pts=end) for clip in self.clips]
+
+class CFG:
+    def __init__(self,
+                 num_epochs: int,
+                 device=torch.device('cpu'),
+                 batch_size=3,
+                 lr=0.001,
+                 save_folder='Experiment1' ,
+                 transform=None):
+ 
+        self.num_epochs = num_epochs
+        self.device = device
+        self.batch_size = batch_size
+        self.lr = lr
+        self.transform = transform
+        self.save_folder=save_folder
+
+    def to_dictionnary(self):
+        return {
+            'num_epochs': self.num_epochs,
+            'batch_size': self.batch_size,
+            'lr': self.lr,
+            
+        }
+ 
+
+def show_video(path):
+    return ipd.Video(path)
+
+def plot_results(results,save=False,plot=False):
+    fig,axs=plt.subplots(ncols=2,nrows=int(np.floor(len(results.columns)/2)),figsize=(17,8))
+    for i,col in enumerate(results.columns[1:]):
+        sns.lineplot(results,x='epochs',y=col,ax=axs[i//2,i%2])
+    if plot:
+        plt.show()
+    if save:
+        fig.savefig('runs/results.png')
+
+def init_folder(path):
+    runs_path=Path('runs')
+    if not(runs_path.exists()):
+        runs_path.mkdir()
+    cur_path= runs_path/path
+    if cur_path.exists():
+        i=1
+        new_path=path
+        while Path(new_path).exists():
+            new_path=runs_path/(path+str(i))
+            i+=1
+        new_path.mkdir()
+        return new_path
+    else:
+        return cur_path
+

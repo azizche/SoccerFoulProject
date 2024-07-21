@@ -4,8 +4,15 @@ from torchvision.models.video import r2plus1d_18, R2Plus1D_18_Weights, s3d, S3D_
 from torchvision.models.video import mvit_v2_s, MViT_V2_S_Weights, mvit_v1_b, MViT_V1_B_Weights
 import torch
 from SoccerFoulProject.config.classes import *
-class MVFoulModel(nn.Module):
+from SoccerFoulProject.train import MVFoulTrainer
+from SoccerFoulProject.validator import MVFoulValidator
+from SoccerFoulProject.utils import plot_results
+from torchvision.io import read_video
+import pandas as pd
+import json
+class Model(nn.Module):
     def __init__(self,video_encoder_name='r3d_18', clip_aggregation='mean',feat_dim=100):
+        super(Model,self).__init__()
         if video_encoder_name== 'r3d_18':
             self.video_encoder= r3d_18(weights= R3D_18_Weights.DEFAULT)
         elif video_encoder_name=='mc3_18':
@@ -20,36 +27,74 @@ class MVFoulModel(nn.Module):
             self.video_encoder=mvit_v1_b(weights=MViT_V1_B_Weights.DEFAULT)
         self.clip_agregation=clip_aggregation
         self.action_classifcation_net=nn.Sequential(
-            nn.LayerNorm(feat_dim),
-            nn.Linear(feat_dim, feat_dim),
+            nn.LayerNorm(400),
+            nn.Linear(400, feat_dim),
             nn.Sigmoid(),
             nn.Linear(feat_dim, len(EVENT_DICTIONARY_action_class)),
         )
         self.offence_classification_net=nn.Sequential(
-            nn.LayerNorm(feat_dim),
-            nn.Linear(feat_dim, feat_dim),
+            nn.LayerNorm(400),
+            nn.Linear(400, feat_dim),
             nn.Sigmoid(),
-            nn.Linear(feat_dim, 1),
+            nn.Linear(feat_dim, 4),
             
         )
-
+        self.cfg=None
+        self.results=pd.DataFrame(columns=['epochs','Train Action loss','Val Action loss','Train Offence severity loss','Val Offence severity loss','Train Action accuracy','Val Action accuracy','Train Offence severity accuracy','Val Offence severity accuracy'])
 
     
 
-    def forward(self, clips):
+    def forward(self, batch_clips):
         #compute video features
-        all_clip_features=self.video_encoder(clips)        
-        #aggregate all clips' features
-        if self.clip_agregation=='mean':
-            action_features= torch.mean(all_clip_features,dim=0) 
-        elif self.clip_agregation=='max':
-            action_features=torch.max(all_clip_features,dim=0)
-        else:
-            print('problem should be mean or max')
-        pred_action=self.action_classifcation_net(action_features)
-        pred_offence_severity=self.offence_classification_net(action_features)
+        batched_pred_action = torch.empty(0, len(EVENT_DICTIONARY_action_class),)
+        batched_pred_offence_severity = torch.empty(0, len(EVENT_DICTIONARY_offence_severity_class),)
+        for clips in batch_clips:
+            all_clip_features=self.video_encoder(clips)        
+            #aggregate all clips' features
+            if self.clip_agregation=='mean':
+                action_features= torch.mean(all_clip_features,dim=0) 
+            elif self.clip_agregation=='max':
+                action_features,_=torch.max(all_clip_features,dim=0)
+            else:
+                print('problem should be mean or max')
+            pred_action=self.action_classifcation_net(action_features)
+            pred_offence_severity=self.offence_classification_net(action_features)
+            batched_pred_action =torch.cat((batched_pred_action,pred_action.unsqueeze(0)),dim=0)
+            batched_pred_offence_severity =torch.cat((batched_pred_offence_severity,pred_offence_severity.unsqueeze(0)),dim=0)
+        return batched_pred_action,batched_pred_offence_severity
+    
+    def do_train(self, dataset,cfg):
+        trainer=MVFoulTrainer(self,dataset,cfg)
+        self.cfg=cfg
+        validator=MVFoulValidator(self,dataset,cfg)
+        for epoch in range(cfg.num_epochs):
+            trainer.train_step()
+            validator.validation_step()
+            new_col=pd.Series({'epochs':epoch+1}).append(trainer.new_series).append(validator.new_series)
+            self.results.loc[epoch]=new_col
+            plot_results(self.results,save=True,plot=False)
+        #saving the hyperparameters
+        with open('runs/hyperparameters.json','w') as f:
+            json.dump(cfg.to_dictionnary(),f)
 
+    def save(self,path):
+        torch.save(self.state_dict(),path)
+    
+    def load(self,path):
+        weights=torch.load(path)
+        self.load_state_dict(weights)
+    
 
+    def predict(self,path,start,end):
+        video,_,_=read_video(path,pts_unit='sec', output_format='TCHW',start_pts=start,end_pts=end)
+        if self.cfg and self.cfg.transform:
+            video=self.cfg.transform(video.float())
+        video=video.permute(1,0,2,3)
+        self.eval()
+        with torch.inference_mode():
+            pred_action,pred_offence_severity=self(video.unsqueeze(0).unsqueeze(0))
+        action=INVERSE_EVENT_DICTIONARY_action_class[ torch.argmax(torch.sigmoid(pred_action.squeeze())).item()]
+        off_severity=INVERSE_EVENT_DICTIONARY_offence_severity_class[ torch.argmax(torch.sigmoid(pred_offence_severity.squeeze())).item()]
+        return action,off_severity
 
-        return pred_action,pred_offence_severity
 

@@ -1,10 +1,13 @@
 # Class name to label index
 
 EVENT_DICTIONARY_action_class = {"Tackling":0,"Standing tackling":1,"High leg":2,"Holding":3,"Pushing":4,
-                        "Elbowing":5, "Challenge":6, "Dive":7, "Dont know":8}
+                        "Elbowing":5, "Challenge":6, "Dive":7,}
+
+
+
 
 INVERSE_EVENT_DICTIONARY_action_class = {0:"Tackling", 1:"Standing tackling", 2:"High leg", 3:"Holding", 4:"Pushing",
-                        5:"Elbowing", 6:"Challenge", 7:"Dive", 8:"Dont know"}
+                        5:"Elbowing", 6:"Challenge", 7:"Dive", }
 
 
 EVENT_DICTIONARY_offence_severity_class = {"No offence":0,"Offence + No card":1,"Offence + Yellow card":2,"Offence + Red card":3}
