@@ -3,18 +3,19 @@ from torch.utils.data import Dataset
 from SoccerFoulProject.utils import *
 from pathlib import Path
 from SoccerFoulProject.data_utils import labels_to_vector
+from SoccerFoulProject import LOGGER
 
 class MVFoulDataset(Dataset):
     def __init__(self,folder_path:str,split:str,num_views:int,start:float,end:float, transform=None):
         if start>3 or end<3:
-            print("Warning vidoe won't include action")
+            LOGGER.warning('Video will not include the action timestamp')
         self.folder_path=folder_path
         self.start=start
         self.end=end
         self.video_paths,self.labels= labels_to_vector(folder_path,split,num_views,)
         self.transform=transform
-        self.start=start
-        self.end=end
+        
+        
     def __len__(self):
         return len(self.video_paths)
 

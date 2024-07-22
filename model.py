@@ -10,6 +10,9 @@ from SoccerFoulProject.utils import plot_results
 from torchvision.io import read_video
 import pandas as pd
 import json
+from pathlib import Path
+from SoccerFoulProject import LOGGER
+from tqdm import tqdm
 class Model(nn.Module):
     def __init__(self,video_encoder_name='r3d_18', clip_aggregation='mean',feat_dim=100):
         super(Model,self).__init__()
@@ -56,28 +59,49 @@ class Model(nn.Module):
             elif self.clip_agregation=='max':
                 action_features,_=torch.max(all_clip_features,dim=0)
             else:
-                print('problem should be mean or max')
+                raise ValueError('Clip aggreagation method should be mean or max')
+                
             pred_action=self.action_classifcation_net(action_features)
             pred_offence_severity=self.offence_classification_net(action_features)
             batched_pred_action =torch.cat((batched_pred_action,pred_action.unsqueeze(0)),dim=0)
             batched_pred_offence_severity =torch.cat((batched_pred_offence_severity,pred_offence_severity.unsqueeze(0)),dim=0)
         return batched_pred_action,batched_pred_offence_severity
     
-    def do_train(self, dataset,cfg):
-        trainer=MVFoulTrainer(self,dataset,cfg)
+    def do_train(self, train_dataset,val_dataset,cfg):
+        trainer=MVFoulTrainer(self,train_dataset,cfg)
         self.cfg=cfg
-        validator=MVFoulValidator(self,dataset,cfg)
+        validator=MVFoulValidator(self,val_dataset,cfg)
+        best_averaged_accuracy=0
+        num_epochs_with_no_improvement=0
         for epoch in range(cfg.num_epochs):
             trainer.train_step()
             validator.validation_step()
+
+            #Appending training and validation results
             new_col=pd.Series({'epochs':epoch+1}).append(trainer.new_series).append(validator.new_series)
             self.results.loc[epoch]=new_col
-            plot_results(self.results,save=True,plot=False)
+
+            #Implementing early stopping and saving the best model's params
+            curr_overall_accuracy=(self.results.loc[epoch,'Val Action Accuracy'] + self.results.loc[epoch,'Val Offence severity Accuracy'])/2
+            if best_averaged_accuracy<curr_overall_accuracy:
+                best_averaged_accuracy=curr_overall_accuracy
+                self.save(trainer.save_folder/Path('weights/best.pt)'))
+                num_epochs_with_no_improvement=0
+            else:
+                num_epochs_with_no_improvement+=1
+            if num_epochs_with_no_improvement==cfg.patience:
+                LOGGER.info('Model has stopeed learning after %d epochs with no improvement in accuracy',cfg.patience)
+        
+        #Plotting results
+        plot_results(self.results,path=trainer.save_folder,save=True,plot=False)
+    
         #saving the hyperparameters
-        with open('runs/hyperparameters.json','w') as f:
+        with open(trainer.save_folder.__str__()+'/hyperparameters.json','w') as f:
             json.dump(cfg.to_dictionnary(),f)
 
     def save(self,path):
+        if not(Path(path).parent.exists()):
+            Path(path).mkdir()
         torch.save(self.state_dict(),path)
     
     def load(self,path):

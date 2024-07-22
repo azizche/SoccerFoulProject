@@ -7,6 +7,9 @@ from SoccerFoulProject.config.classes import *
 import IPython.display as ipd 
 import matplotlib.pyplot as plt
 import seaborn as sns
+import logging 
+from SoccerFoulProject import LOGGER
+
 def read_data(json_path):
     with open(json_path, 'r') as file:
         data=json.load(file)
@@ -116,7 +119,7 @@ class Clips:
         for clip in self.clips:
             if clip.camera_type=="Main camera center":
                 return clip
-        #TODO: add warning if no main camera found
+        LOGGER.warning('No main camera was found')
 
     def __len__(self):
         return len(self.clips)
@@ -131,6 +134,9 @@ class CFG:
                  batch_size=3,
                  lr=0.001,
                  save_folder='Experiment1' ,
+                 gradient_accumulation_steps=1,
+                 lr_scheduler=None,
+                 patience=None,
                  transform=None):
  
         self.num_epochs = num_epochs
@@ -139,12 +145,19 @@ class CFG:
         self.lr = lr
         self.transform = transform
         self.save_folder=save_folder
+        self.gradient_accumulation_steps=gradient_accumulation_steps
+        self.lr_scheduler=lr_scheduler
+        if not(patience):
+            self.patience=num_epochs
+        else:
+            self.patience=patience
 
     def to_dictionnary(self):
         return {
-            'num_epochs': self.num_epochs,
-            'batch_size': self.batch_size,
-            'lr': self.lr,
+            'Numbre of epochs': self.num_epochs,
+            'Batch Size': self.batch_size,
+            'Learning rate': self.lr,
+            'Gradient accumulation steps':self.gradient_accumulation_steps,
             
         }
  
@@ -152,14 +165,14 @@ class CFG:
 def show_video(path):
     return ipd.Video(path)
 
-def plot_results(results,save=False,plot=False):
+def plot_results(results,path,save=False,plot=False):
     fig,axs=plt.subplots(ncols=2,nrows=int(np.floor(len(results.columns)/2)),figsize=(17,8))
     for i,col in enumerate(results.columns[1:]):
         sns.lineplot(results,x='epochs',y=col,ax=axs[i//2,i%2])
     if plot:
         plt.show()
     if save:
-        fig.savefig('runs/results.png')
+        fig.savefig(path.__str__()+'/results.png')
 
 def init_folder(path):
     runs_path=Path('runs')
