@@ -102,6 +102,7 @@ class Clips:
     @classmethod
     def from_dictionnary(cls,data,num_views):
         res=[]
+        main_camera_found=False
         for clip_info in data:
             
             if clip_info['Camera type']=="Main camera center":
