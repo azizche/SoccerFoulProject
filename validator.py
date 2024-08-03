@@ -19,7 +19,7 @@ class MVFoulValidator:
         self.loss_fn_off_sev=torch.nn.CrossEntropyLoss()
         self.action_conf_matrix=ConfusionMatrix(EVENT_DICTIONARY_action_class.keys())
         self.off_sev_conf_matrix=ConfusionMatrix(EVENT_DICTIONARY_offence_severity_class.keys())
-        self.results=pd.DataFrame(columns=['Val Action loss','Val Offence severity loss','Val Action accuracy','Val Offence severity accuracy'])
+        self.results=pd.DataFrame(columns=['Val Action loss','Val Offence severity loss','Val Action Accuracy','Val Offence severity Accuracy'])
         
 
     def validation_step(self,):
@@ -40,8 +40,8 @@ class MVFoulValidator:
 
         loss_ac_all/=len(self.val_dataloader)
         loss_off_sev_all/=len(self.val_dataloader)
-        self.new_series=pd.Series({'Val Action loss':loss_ac_all,'Val Offence severity loss':loss_off_sev_all,'Val Action accuracy':self.action_conf_matrix.compute_accuracy(),'Val Offence severity accuracy':self.off_sev_conf_matrix.compute_accuracy()})
-        self.results=pd.concat([self.results,self.new_series],ignore_index=True)
+        self.new_series=pd.Series({'Val Action loss':loss_ac_all,'Val Offence severity loss':loss_off_sev_all,'Val Action Accuracy':self.action_conf_matrix.compute_accuracy(),'Val Offence severity Accuracy':self.off_sev_conf_matrix.compute_accuracy()})
+        self.results=pd.concat([self.results,self.new_series.to_frame().T],ignore_index=True)
         LOGGER.info(self.results.iloc[-1].to_frame().T)
 
 

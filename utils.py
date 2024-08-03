@@ -133,7 +133,7 @@ class CFG:
                  device=torch.device('cpu'),
                  batch_size=3,
                  lr=0.001,
-                 save_folder='Experiment1' ,
+                 save_folder='Experiment' ,
                  gradient_accumulation_steps=1,
                  lr_scheduler=None,
                  patience=None,
@@ -181,11 +181,12 @@ def init_folder(path):
     cur_path= runs_path/path
     if cur_path.exists():
         i=1
-        new_path=path
+        new_path=runs_path/(path+str(i))
         while Path(new_path).exists():
-            new_path=runs_path/(path+str(i))
             i+=1
-        new_path.mkdir()
+            new_path=runs_path/(path+str(i))
+        
+        Path(new_path).mkdir()
         return new_path
     else:
         return cur_path

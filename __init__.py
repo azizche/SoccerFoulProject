@@ -17,4 +17,4 @@ def set_logger(name='LOGGING NAME',verbose=True):
     logger.addHandler(streamHandler)
     logger.setLevel(level)
     return logger
-LOGGER=set_logger(LOGGING_NAME,verbose=False)
+LOGGER=set_logger(LOGGING_NAME,verbose=True)

@@ -43,7 +43,7 @@ class Model(nn.Module):
             
         )
         self.cfg=None
-        self.results=pd.DataFrame(columns=['epochs','Train Action loss','Val Action loss','Train Offence severity loss','Val Offence severity loss','Train Action accuracy','Val Action accuracy','Train Offence severity accuracy','Val Offence severity accuracy'])
+        self.results=pd.DataFrame(columns=['epochs','Train Action loss','Val Action loss','Train Offence severity loss','Val Offence severity loss','Train Action Accuracy','Val Action Accuracy','Train Offence severity Accuracy','Val Offence severity Accuracy'])
 
     
 
@@ -78,19 +78,23 @@ class Model(nn.Module):
             validator.validation_step()
 
             #Appending training and validation results
-            new_col=pd.Series({'epochs':epoch+1}).append(trainer.new_series).append(validator.new_series)
+            new_col = pd.concat([pd.Series({'epochs': epoch+1}), trainer.new_series, validator.new_series])
             self.results.loc[epoch]=new_col
+
+            #saving model's last weights
+            self.save(trainer.save_folder/Path('weights')/Path('last.pth'))
 
             #Implementing early stopping and saving the best model's params
             curr_overall_accuracy=(self.results.loc[epoch,'Val Action Accuracy'] + self.results.loc[epoch,'Val Offence severity Accuracy'])/2
             if best_averaged_accuracy<curr_overall_accuracy:
                 best_averaged_accuracy=curr_overall_accuracy
-                self.save(trainer.save_folder/Path('weights/best.pt)'))
+                self.save(trainer.save_folder/Path('weights')/Path('best.pth'))
                 num_epochs_with_no_improvement=0
             else:
                 num_epochs_with_no_improvement+=1
             if num_epochs_with_no_improvement==cfg.patience:
                 LOGGER.info('Model has stopeed learning after %d epochs with no improvement in accuracy',cfg.patience)
+                break
         
         #Plotting results
         plot_results(self.results,path=trainer.save_folder,save=True,plot=False)
@@ -99,10 +103,10 @@ class Model(nn.Module):
         with open(trainer.save_folder.__str__()+'/hyperparameters.json','w') as f:
             json.dump(cfg.to_dictionnary(),f)
 
-    def save(self,path):
-        if not(Path(path).parent.exists()):
-            Path(path).mkdir()
-        torch.save(self.state_dict(),path)
+    def save(self,path:Path):            
+        if not(path.parent.exists()):
+            Path(path.parent).mkdir(parents=True)
+        torch.save(self.state_dict(),path.__str__())
     
     def load(self,path):
         weights=torch.load(path)

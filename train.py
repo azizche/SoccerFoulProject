@@ -23,10 +23,10 @@ class MVFoulTrainer:
         self.action_conf_matrix=ConfusionMatrix(EVENT_DICTIONARY_action_class.keys())
         self.off_sev_conf_matrix=ConfusionMatrix(EVENT_DICTIONARY_offence_severity_class.keys())
         self.save_folder=init_folder(args.save_folder)
-        self.results=pd.DataFrame(columns=['Train Action loss','Train Offence severity loss','Train Action accuracy','Train Offence severity accuracy'])
+        self.results=pd.DataFrame(columns=['Train Action loss','Train Offence severity loss','Train Action Accuracy','Train Offence severity Accuracy'])
 
     def get_lr_scheduler(self):
-        if not(self.lr_scheduler):
+        if not(self.args.lr_scheduler):
             self.lr_scheduler=None
         else:
             lr_scheduler_map={'cosineAnnealingwarmrestarts':CosineAnnealingWarmRestarts, 'cosineannealinglr':CosineAnnealingLR, 'reducelronplateau':ReduceLROnPlateau}
@@ -54,8 +54,8 @@ class MVFoulTrainer:
         
         loss_ac_all/=len(self.train_dataloader)
         loss_off_sev_all/=len(self.train_dataloader)
-        self.new_series=pd.Series({'Train Action loss':loss_ac_all,'Train Offence severity loss':loss_off_sev_all,'Train Action accuracy':self.action_conf_matrix.compute_accuracy(),'Train Offence severity accuracy':self.off_sev_conf_matrix.compute_accuracy()})
-        self.results=pd.concat([self.results,self.new_series],ignore_index=True)
+        self.new_series=pd.Series({'Train Action loss':loss_ac_all,'Train Offence severity loss':loss_off_sev_all,'Train Action Accuracy':self.action_conf_matrix.compute_accuracy(),'Train Offence severity Accuracy':self.off_sev_conf_matrix.compute_accuracy()})
+        self.results=pd.concat([self.results,self.new_series.to_frame().T],ignore_index=True)
         LOGGER.info(self.results.iloc[-1].to_frame().T)
             
 
