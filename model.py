@@ -73,7 +73,7 @@ class Model(nn.Module):
         validator=MVFoulValidator(self,val_dataset,cfg)
         best_averaged_accuracy=0
         num_epochs_with_no_improvement=0
-        for epoch in range(cfg.num_epochs):
+        for epoch in tqdm(range(cfg.num_epochs)):
             trainer.train_step()
             validator.validation_step()
 

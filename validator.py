@@ -27,7 +27,7 @@ class MVFoulValidator:
 
         loss_ac_all,loss_off_sev_all=0,0
         with torch.inference_mode():
-            for video_clips,label in tqdm(self.val_dataloader,desc='VALIDATION'):
+            for video_clips,label in self.val_dataloader:
                 video_clips=video_clips.to(self.args.device)
                 pred_action,pred_offence_severity=self.model(video_clips)
                 loss_ac=self.loss_fn_action(pred_action,label['Action label'].to(self.args.device))/self.args.gradient_accumulation_steps
