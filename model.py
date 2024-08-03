@@ -46,11 +46,7 @@ class Model(nn.Module):
         self.results=pd.DataFrame(columns=['epochs','Train Action loss','Val Action loss','Train Offence severity loss','Val Offence severity loss','Train Action Accuracy','Val Action Accuracy','Train Offence severity Accuracy','Val Offence severity Accuracy'])
 
     
-    def to(self,*args):
-        super().to(*args)
-        self.video_encoder.to(*args)
-        self.offence_classification_net.to(*args)
-    
+
 
     def forward(self, batch_clips):
         #compute video features
