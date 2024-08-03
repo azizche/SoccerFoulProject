@@ -42,9 +42,15 @@ class Model(nn.Module):
             nn.Linear(feat_dim, 4),
             
         )
+        self.to()
         self.cfg=None
         self.results=pd.DataFrame(columns=['epochs','Train Action loss','Val Action loss','Train Offence severity loss','Val Offence severity loss','Train Action Accuracy','Val Action Accuracy','Train Offence severity Accuracy','Val Offence severity Accuracy'])
 
+    
+    def to(self,*args):
+        super().to(*args)
+        self.video_encoder.to(*args)
+        self.offence_classification_net.to(*args)
     
 
     def forward(self, batch_clips):
@@ -73,6 +79,7 @@ class Model(nn.Module):
         validator=MVFoulValidator(self,val_dataset,cfg)
         best_averaged_accuracy=0
         num_epochs_with_no_improvement=0
+        self.to(cfg.device)
         for epoch in tqdm(range(cfg.num_epochs)):
             trainer.train_step()
             validator.validation_step()
