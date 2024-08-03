@@ -55,8 +55,8 @@ class Model(nn.Module):
 
     def forward(self, batch_clips):
         #compute video features
-        batched_pred_action = torch.empty(0, len(EVENT_DICTIONARY_action_class),)
-        batched_pred_offence_severity = torch.empty(0, len(EVENT_DICTIONARY_offence_severity_class),)
+        batched_pred_action = torch.empty(0, len(EVENT_DICTIONARY_action_class),device=self.cfg.device)
+        batched_pred_offence_severity = torch.empty(0, len(EVENT_DICTIONARY_offence_severity_class),device=self.cfg.device)
         for clips in batch_clips:
             all_clip_features=self.video_encoder(clips)        
             #aggregate all clips' features

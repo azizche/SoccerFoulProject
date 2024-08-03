@@ -35,7 +35,7 @@ class MVFoulTrainer:
     def train_step(self):
         loss_ac_all,loss_off_sev_all=0,0
         for step,(video_clips,label) in enumerate(self.train_dataloader):
-            video_clips=video_clips.to(self.args.device)
+            video_clips.to(self.args.device)
             pred_action,pred_offence_severity=self.model(video_clips)
             
             loss_ac=self.loss_fn_action(pred_action,label['Action label'].to(self.args.device))/self.args.gradient_accumulation_steps
