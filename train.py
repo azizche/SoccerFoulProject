@@ -35,20 +35,22 @@ class MVFoulTrainer:
     def train_step(self):
         loss_ac_all,loss_off_sev_all=0,0
         for step,(video_clips,label) in enumerate(self.train_dataloader):
-            video_clips.to(self.args.device)
+            video_clips=video_clips.to(self.args.device)
             pred_action,pred_offence_severity=self.model(video_clips)
             
             loss_ac=self.loss_fn_action(pred_action,label['Action label'].to(self.args.device))/self.args.gradient_accumulation_steps
             loss_off_sev=self.loss_fn_off_sev(pred_offence_severity,label['Offence severity label'].to(self.args.device).float())/self.args.gradient_accumulation_steps
+
             self.action_conf_matrix.process(torch.argmax(torch.sigmoid(pred_action),dim=1),torch.argmax(label['Action label'],dim=1))
             self.action_conf_matrix.process(torch.argmax(torch.sigmoid(pred_offence_severity),dim=1),torch.argmax(label['Offence severity label'],dim=1))
+
             loss_ac.backward(retain_graph=True)
             loss_off_sev.backward()
             if (step+1)%self.args.gradient_accumulation_steps==0:
                 self.optimizer.step()
                 self.optimizer.zero_grad()
-            loss_ac_all+=loss_ac.detach().numpy()
-            loss_off_sev_all+=loss_off_sev.detach().numpy()
+            loss_ac_all+=loss_ac.detach().cpu().numpy()
+            loss_off_sev_all+=loss_off_sev.detach().cpu().numpy()
         if self.lr_scheduler:
             self.lr_scheduler.step()
         

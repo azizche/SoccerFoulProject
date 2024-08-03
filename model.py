@@ -42,7 +42,6 @@ class Model(nn.Module):
             nn.Linear(feat_dim, 4),
             
         )
-        self.to()
         self.cfg=None
         self.results=pd.DataFrame(columns=['epochs','Train Action loss','Val Action loss','Train Offence severity loss','Val Offence severity loss','Train Action Accuracy','Val Action Accuracy','Train Offence severity Accuracy','Val Offence severity Accuracy'])
 
@@ -58,6 +57,7 @@ class Model(nn.Module):
         batched_pred_action = torch.empty(0, len(EVENT_DICTIONARY_action_class),device=self.cfg.device)
         batched_pred_offence_severity = torch.empty(0, len(EVENT_DICTIONARY_offence_severity_class),device=self.cfg.device)
         for clips in batch_clips:
+            
             all_clip_features=self.video_encoder(clips)        
             #aggregate all clips' features
             if self.clip_agregation=='mean':
@@ -120,14 +120,19 @@ class Model(nn.Module):
         self.load_state_dict(weights)
     
 
-    def predict(self,path,start,end):
-        video,_,_=read_video(path,pts_unit='sec', output_format='TCHW',start_pts=start,end_pts=end)
-        if self.cfg and self.cfg.transform:
-            video=self.cfg.transform(video.float())
-        video=video.permute(1,0,2,3)
+    def predict(self,path,start,end,cfg):
+        self.cfg=cfg
+        videos=[]
+        for clip_path in Path(path).glob('*.mp4'):
+            video=read_video(clip_path,pts_unit='sec', output_format='TCHW',start_pts=start,end_pts=end)[0].float()
+            if self.cfg and self.cfg.transform:
+                video=self.cfg.transform(video)
+            videos.append(video.permute(1,0,2,3).unsqueeze(0))
+        videos=torch.vstack(videos)
+        self.to(self.cfg.device)
         self.eval()
         with torch.inference_mode():
-            pred_action,pred_offence_severity=self(video.unsqueeze(0).unsqueeze(0))
+            pred_action,pred_offence_severity=self(videos.unsqueeze(0).to(self.cfg.device))
         action=INVERSE_EVENT_DICTIONARY_action_class[ torch.argmax(torch.sigmoid(pred_action.squeeze())).item()]
         off_severity=INVERSE_EVENT_DICTIONARY_offence_severity_class[ torch.argmax(torch.sigmoid(pred_offence_severity.squeeze())).item()]
         return action,off_severity

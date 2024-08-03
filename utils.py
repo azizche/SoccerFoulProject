@@ -167,7 +167,7 @@ def show_video(path):
     return ipd.Video(path)
 
 def plot_results(results,path,save=False,plot=False):
-    fig,axs=plt.subplots(ncols=2,nrows=int(np.floor(len(results.columns)/2)),figsize=(17,8))
+    fig,axs=plt.subplots(ncols=2,nrows=int(np.floor(len(results.columns)/2)),figsize=(20,10))
     for i,col in enumerate(results.columns[1:]):
         sns.lineplot(results,x='epochs',y=col,ax=axs[i//2,i%2])
     if plot:
