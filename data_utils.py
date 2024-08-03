@@ -13,7 +13,7 @@ def labels_to_vector(folder_path:str,split:str,num_views:int ) -> Tuple[list[Cli
         label=Label.from_dictionary(action_info)
 
         #Remove actions where action class is unknown or empty
-        if label.action_class=='' or label.action_class=="Don't know":
+        if label.action_class not in EVENT_DICTIONARY_action_class.keys():
             actions_to_skip.append(action)
             continue
         
