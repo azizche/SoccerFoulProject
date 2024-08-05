@@ -10,6 +10,7 @@ class MVFoulDataset(Dataset):
         if start>3 or end<3:
             LOGGER.warning('Video will not include the action timestamp')
         self.folder_path=folder_path
+        self.split=split
         self.start=start
         self.end=end
         self.video_paths,self.labels= labels_to_vector(folder_path,split,num_views,)
@@ -21,7 +22,7 @@ class MVFoulDataset(Dataset):
 
     def __getitem__(self,index):
         #Reading videos into lists
-        videos=self.video_paths[index].read_clips(self.start,self.end)
+        videos=self.video_paths[index].read_clips(self.folder_path,self.split,self.start,self.end)
         
         #Transforming frames in videos and slicing the videos
         if self.transform:

@@ -6,7 +6,7 @@ import torch
 from SoccerFoulProject.config.classes import *
 from SoccerFoulProject.train import MVFoulTrainer
 from SoccerFoulProject.validator import MVFoulValidator
-from SoccerFoulProject.utils import plot_results
+from SoccerFoulProject.utils import Clip, plot_results
 from torchvision.io import read_video
 import pandas as pd
 import json
@@ -105,6 +105,12 @@ class Model(nn.Module):
         #saving the hyperparameters
         with open(trainer.save_folder.__str__()+'/hyperparameters.json','w') as f:
             json.dump(cfg.to_dictionnary(),f)
+        
+        #Saving confusion matrix
+        trainer.action_conf_matrix.plot(normalized=False,show=False,save=True,path=trainer.save_folder,prefix="train_action")
+        validator.action_conf_matrix.plot(normalized=False,show=False,save=True,path=trainer.save_folder,prefix="val_action")
+        trainer.off_sev_conf_matrix.plot(normalized=False,show=False,save=True,path=trainer.save_folder,prefix="train_off_sev")
+        validator.off_sev_conf_matrix.plot(normalized=False,show=False,save=True,path=trainer.save_folder,prefix="val_off_sev")
 
     def save(self,path:Path):            
         if not(path.parent.exists()):

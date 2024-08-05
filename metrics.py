@@ -7,6 +7,7 @@ class ConfusionMatrix:
         self.num_classes=len(class_names)
         self.matrix= np.zeros((self.num_classes,self.num_classes))
         self.class_names=class_names
+
     def process(self, predictions,labels):
         for pred_class,label_class in zip(predictions,labels):
             self.matrix[label_class][pred_class]+=1
@@ -14,16 +15,21 @@ class ConfusionMatrix:
     def compute_accuracy(self,eps=1e-7):
         return np.sum(self.matrix.trace())/(np.sum(self.matrix)+eps)
     
-    def plot(self,normalized=False):
-        plt.figure(figsize=(8,6))
-        matrix=self.matrix
+    def plot(self,normalized=False,show=False,save=False,path='',prefix=''):
+        fig=plt.figure(figsize=(12,10))
         title='Confusion Matrix'
+        matrix=self.matrix
         if normalized:
-            matrix/= np.max(matrix,axis=0)
+            matrix=matrix.astype('float') /np.max(matrix,axis=0)
             title= 'Normalized '+title
-        sns.heatmap(self.matrix,xticklabels=self.class_names,yticklabels=self.class_names,cmap="Blues", annot=True, cbar=True)
+        sns.heatmap(matrix,xticklabels=self.class_names,yticklabels=self.class_names,cmap="Blues", linewidths=.5,fmt='.2f' if normalized else ".2g",annot=True)
         plt.xlabel('Predicted Labels')
         plt.ylabel('True Labels')
         plt.title(title)
-        plt.show()
+        if show:
+            plt.show()
+        if save:
+            normalized_str='Normalized' if normalized else ''
+            fig.savefig(path.__str__()+f'/{prefix}_Confusion_Matrix_{normalized_str}.png')
+
 

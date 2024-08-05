@@ -7,8 +7,6 @@ def labels_to_vector(folder_path:str,split:str,num_views:int ) -> Tuple[list[Cli
     video_paths=[]
     labels= []
     actions_to_skip=[]
-    Clip.folder_path=folder_path
-    Clip.split=split
     for action,action_info in annotations['Actions'].items():
         label=Label.from_dictionary(action_info)
 
@@ -39,16 +37,12 @@ def labels_to_vector(folder_path:str,split:str,num_views:int ) -> Tuple[list[Cli
             actions_to_skip.append(action)
             continue
         if label.offence=='' or label.action_class=='' or label.severity=='':
-            print('Problem')
-            print('action_calss', label.action_class)
-            print('severity',label.severity)
-            print('offence', label.offence) 
             actions_to_skip.append(action)
             continue        
-
-        
+ 
         video_paths.append(Clips.from_dictionnary(action_info['Clips'],num_views))
         labels.append(label)
+
     return video_paths, labels
 
 

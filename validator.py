@@ -33,7 +33,7 @@ class MVFoulValidator:
                 loss_ac=self.loss_fn_action(pred_action,label['Action label'].to(self.args.device))/self.args.gradient_accumulation_steps
                 loss_off_sev=self.loss_fn_off_sev(pred_offence_severity,label['Offence severity label'].to(self.args.device).float())/self.args.gradient_accumulation_steps
                 self.action_conf_matrix.process(torch.argmax(torch.sigmoid(pred_action),dim=1),torch.argmax(label['Action label'],dim=1))
-                self.action_conf_matrix.process(torch.argmax(torch.sigmoid(pred_offence_severity),dim=1),torch.argmax(label['Offence severity label'],dim=1))
+                self.off_sev_conf_matrix.process(torch.argmax(torch.sigmoid(pred_offence_severity),dim=1),torch.argmax(label['Offence severity label'],dim=1))
                 loss_ac_all+=loss_ac.detach().cpu().numpy()
                 loss_off_sev_all+=loss_off_sev.detach().cpu().numpy()
             

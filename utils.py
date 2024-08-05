@@ -71,8 +71,7 @@ class Label:
 
 
 class Clip:
-    folder_path=''
-    split=''
+    
     def __init__(self,generic_path,camera_type,action_timestamp,replay_speed):
         self.generic_path=generic_path
         self.camera_type=camera_type
@@ -86,13 +85,13 @@ class Clip:
                    action_timestamp=int(data['Timestamp']),
                    replay_speed=data['Replay speed'])
     
-    def get_relative_path(self):
+    def get_relative_path(self,folder_path,split):
         path_abs= Path(self.generic_path+'.mp4')
-        path_r= Path(f'{Clip.folder_path}/{Clip.split}')/ path_abs.parent.name / path_abs.name
+        path_r= Path(f'{folder_path}/{split}')/ path_abs.parent.name / path_abs.name
         return path_r    
     
-    def read_clip(self,start_pts,end_pts):
-        video= read_video(self.get_relative_path(), pts_unit='sec', output_format='TCHW',start_pts=start_pts,end_pts=end_pts)[0]        
+    def read_clip(self,folder_path,split,start_pts,end_pts):
+        video= read_video(self.get_relative_path(folder_path,split), pts_unit='sec', output_format='TCHW',start_pts=start_pts,end_pts=end_pts)[0]        
         return video 
 
 class Clips:
@@ -125,8 +124,8 @@ class Clips:
     def __len__(self):
         return len(self.clips)
     
-    def read_clips(self, start,end):
-        return [clip.read_clip(start_pts=start,end_pts=end) for clip in self.clips]
+    def read_clips(self,folder_path,split, start,end):
+        return [clip.read_clip(folder_path=folder_path,split=split,start_pts=start,end_pts=end) for clip in self.clips]
 
 class CFG:
     def __init__(self,
