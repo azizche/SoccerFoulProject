@@ -102,13 +102,9 @@ class Clips:
     def from_dictionnary(cls,data,num_views):
         res=[]
         for clip_info in data:            
-            if clip_info['Camera type']=="Main camera center":
-                if len(res)>0:
-                    res.pop()
+            
+            if len(res)<num_views:
                 res.append(Clip.from_dictionnary(clip_info))
-            else:
-                if len(res)<num_views:
-                    res.append(Clip.from_dictionnary(clip_info))
         return cls(res)
     def get_main_camera(self):
         for clip in self.clips:
