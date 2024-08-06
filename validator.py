@@ -8,7 +8,6 @@ from SoccerFoulProject.dataset import MVFoulDataset
 from SoccerFoulProject.metrics import ConfusionMatrix
 import pandas as pd
 from SoccerFoulProject import LOGGER
-from tqdm import tqdm
 class MVFoulValidator:
     def __init__(self,model,dataset:MVFoulDataset,cfg:CFG):
         self.args=cfg

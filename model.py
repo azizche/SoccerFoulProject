@@ -6,7 +6,7 @@ import torch
 from SoccerFoulProject.config.classes import *
 from SoccerFoulProject.train import MVFoulTrainer
 from SoccerFoulProject.validator import MVFoulValidator
-from SoccerFoulProject.utils import Clip, plot_results
+from SoccerFoulProject.utils import CFG, plot_results
 from torchvision.io import read_video
 import pandas as pd
 import json
@@ -22,12 +22,7 @@ class Model(nn.Module):
             self.video_encoder= mc3_18(weights=MC3_18_Weights.DEFAULT)
         elif video_encoder_name=='r2plus1d_18':
             self.video_encoder= r2plus1d_18(weights=R2Plus1D_18_Weights.DEFAULT)
-        elif video_encoder_name=='s3d':
-            self.video_encoder=s3d(weights= S3D_Weights.DEFAULT)
-        elif video_encoder_name=='mvit_v2_s':
-            self.video_encoder=mvit_v2_s(weights=MViT_V2_S_Weights.DEFAULT)
-        elif video_encoder_name=='mvit_v1_b':
-            self.video_encoder=mvit_v1_b(weights=MViT_V1_B_Weights.DEFAULT)
+
         self.clip_agregation=clip_aggregation
         self.action_classifcation_net=nn.Sequential(
             nn.LayerNorm(400),
@@ -122,15 +117,24 @@ class Model(nn.Module):
         self.load_state_dict(weights)
     
 
-    def predict(self,path,start,end,cfg):
-        self.cfg=cfg
-        videos=[]
-        for clip_path in Path(path).glob('*.mp4'):
-            video=read_video(clip_path,pts_unit='sec', output_format='TCHW',start_pts=start,end_pts=end)[0].float()
+    def predict(self,path,start=0,end=5,device=torch.device('cpu')):
+        self.cfg=CFG(device=device)
+        path=Path(path)
+        if not(path.exists()):
+            raise ValueError(f'{path.__str__()} does not exist')
+        elif path.is_dir():
+            videos=[]
+            for clip_path in Path(path).glob('*.mp4'):
+                video=read_video(clip_path,pts_unit='sec', output_format='TCHW',start_pts=start,end_pts=end)[0].float()
+                if self.cfg and self.cfg.transform:
+                    video=self.cfg.transform(video)
+                videos.append(video.permute(1,0,2,3).unsqueeze(0))
+            videos=torch.vstack(videos)
+        elif path.is_file():
+            video=read_video(path,pts_unit='sec', output_format='TCHW',start_pts=start,end_pts=end)[0].float()
             if self.cfg and self.cfg.transform:
                 video=self.cfg.transform(video)
-            videos.append(video.permute(1,0,2,3).unsqueeze(0))
-        videos=torch.vstack(videos)
+            videos=video.permute(1,0,2,3).unsqueeze(0)
         self.to(self.cfg.device)
         self.eval()
         with torch.inference_mode():

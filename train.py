@@ -8,7 +8,6 @@ from SoccerFoulProject.dataset import MVFoulDataset
 from SoccerFoulProject.metrics import ConfusionMatrix
 import pandas as pd
 from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts, CosineAnnealingLR, ReduceLROnPlateau
-from tqdm import tqdm
 from SoccerFoulProject import LOGGER
 class MVFoulTrainer:
     def __init__(self,model,dataset:MVFoulDataset,args:CFG,):
